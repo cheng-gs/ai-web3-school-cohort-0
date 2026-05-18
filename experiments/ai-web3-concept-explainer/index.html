@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI × Web3 概念解释器</title>
+  <style>
+    :root {
+      --bg: #f7f2e8;
+      --paper: #fffdf8;
+      --ink: #182230;
+      --muted: #53606e;
+      --line: #d6c7ae;
+      --accent: #a43f1f;
+      --accent-soft: #f1d7bf;
+      --accent-2: #0f6d62;
+      --shadow: 0 20px 45px rgba(24, 34, 48, 0.12);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(164, 63, 31, 0.18), transparent 30%),
+        radial-gradient(circle at right 20%, rgba(15, 109, 98, 0.12), transparent 28%),
+        linear-gradient(160deg, #f7f2e8 0%, #efe5d2 100%);
+      font-family: "Source Han Serif SC", "Noto Serif SC", "STSong", serif;
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 32px auto;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .card {
+      background: rgba(255, 253, 248, 0.86);
+      border: 1px solid rgba(214, 199, 174, 0.8);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+
+    .hero,
+    .panel {
+      padding: 28px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(32px, 5vw, 54px);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 46ch;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .pill {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.72);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .pill strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .panel h2 {
+      margin: 0 0 16px;
+      font-size: 24px;
+    }
+
+    .form {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 108px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff7f0;
+    }
+
+    .secondary {
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .output {
+      margin-top: 22px;
+      padding: 20px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255, 248, 240, 0.88), rgba(245, 250, 248, 0.92));
+      border: 1px solid rgba(214, 199, 174, 0.85);
+    }
+
+    .output h3 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    .section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed rgba(83, 96, 110, 0.28);
+    }
+
+    .section:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      color: var(--accent-2);
+      font-size: 14px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .section p,
+    .section li {
+      color: var(--ink);
+      line-height: 1.72;
+      margin: 0;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .footnote {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    @media (max-width: 920px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="card hero">
+      <span class="eyebrow">Week 1 最小可交互学习产物</span>
+      <h1>AI × Web3 概念解释器</h1>
+      <p class="lead">
+        这是一个面向新手的本地网页原型。输入一个概念、你的背景和疑问，它会生成一份
+        “解释 + 类比 + 误区 + 下一步行动”的学习草稿，帮助你把抽象术语转成可操作的理解。
+      </p>
+      <div class="grid">
+        <div class="pill">
+          <strong>它解决什么问题</strong>
+          AI 和 Web3 术语容易各说各话，这个工具把概念拆成统一模板，帮助快速进入同一语境。
+        </div>
+        <div class="pill">
+          <strong>它怎么帮助学习</strong>
+          它把“听懂概念”变成“知道怎么解释、怎么举例、哪里容易误解、下一步该做什么”。
+        </div>
+        <div class="pill">
+          <strong>AI 参与了哪里</strong>
+          初版结构和文案框架由 AI 辅助起草，我人工改写并校正概念边界。
+        </div>
+        <div class="pill">
+          <strong>当前边界</strong>
+          这是本地原型，不连接真实模型 API，不适合当作权威定义或链上执行建议。
+        </div>
+      </div>
+    </section>
+
+    <section class="card panel">
+      <h2>生成一份学习草稿</h2>
+      <form class="form" id="generator-form">
+        <label>
+          选择概念
+          <select id="concept">
+            <option value="agent">Agent</option>
+            <option value="workflow">Workflow</option>
+            <option value="tool_use">Tool Use</option>
+            <option value="wallet">Wallet</option>
+            <option value="signature">Signature</option>
+            <option value="transaction">Transaction</option>
+            <option value="gas">Gas</option>
+          </select>
+        </label>
+
+        <label>
+          你的背景
+          <select id="background">
+            <option value="ai">我偏 AI，Web3 刚入门</option>
+            <option value="web3">我偏 Web3，AI 刚入门</option>
+            <option value="beginner">我两边都刚入门</option>
+          </select>
+        </label>
+
+        <label>
+          输出风格
+          <select id="tone">
+            <option value="plain">尽量直白</option>
+            <option value="technical">稍微技术一点</option>
+            <option value="comparison">多用对比和类比</option>
+          </select>
+        </label>
+
+        <label>
+          你现在最困惑的点
+          <textarea id="confusion" placeholder="例如：我总分不清签名和交易的关系，或者我不知道 agent 和 workflow 到底差在哪。"></textarea>
+        </label>
+
+        <div class="actions">
+          <button type="submit" class="primary">生成解释草稿</button>
+          <button type="button" class="secondary" id="sample-btn">填入示例</button>
+        </div>
+      </form>
+
+      <section class="output" id="output">
+        <h3>输出会显示在这里</h3>
+        <div class="section">
+          <p>先选择一个概念，写下你的困惑，再点击“生成解释草稿”。</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const concepts = {
+      agent: {
+        title: "Agent",
+        explanation: {
+          ai: "对偏 AI 背景的你来说，agent 不是单次回答模型，而是会围绕目标持续做判断、调用工具、推进任务的一层执行系统。",
+          web3: "对偏 Web3 背景的你来说，agent 可以理解成一个带推理能力的自动化协作者，它不像普通脚本只按固定路径走，而是会根据中间结果调整下一步。",
+          beginner: "对初学者来说，agent 就像一个会自己拆任务、查资料、用工具、再回来汇报的数字助理。"
+        },
+        example: "例如让 learning agent 帮你整理 Week 1 学习计划、生成 daily note、检查仓库状态，再由你决定是否提交，这就比单次问答更像 agent。",
+        misconception: "常见误区是把任何多步骤任务都叫 agent。很多任务其实只是 workflow，因为步骤早就写死了，不需要模型自主决策。",
+        nextStep: "下一步可以拿同一个任务分别试一次“纯 prompt”和“agent 协助”，比较它们在上下文保持和工具调用上的差异。"
+      },
+      workflow: {
+        title: "Workflow",
+        explanation: {
+          ai: "workflow 是把任务拆成固定步骤的流程，模型只是其中一个节点，负责生成或判断，但流程顺序通常由人预先定义。",
+          web3: "对你来说，workflow 更接近一个带 AI 节点的流程编排，而不是一个能自由发挥的自治系统。",
+          beginner: "workflow 就像一张已经画好的操作流程图，AI 只是在其中某几步帮忙，不负责决定整条路线。"
+        },
+        example: "例如“读取课程要求 -> 生成今日任务 -> 人工确认 -> 写入 daily note -> 检查 git status -> 提交”就是一个固定 workflow。",
+        misconception: "误区是觉得 workflow 不高级。实际上在高风险场景里，固定流程通常比自由决策更稳、更容易排错。",
+        nextStep: "你可以先把一次学习任务写成 5 步 workflow，再判断哪些步骤真的需要 agent。"
+      },
+      tool_use: {
+        title: "Tool Use",
+        explanation: {
+          ai: "tool use 指的是模型不只输出文字，而是通过结构化调用去读文件、运行命令、查资料或操作系统。",
+          web3: "如果你熟悉链上交互，可以把 tool use 理解成“模型发出结构化调用请求，由外部执行器替它真的去做事”。",
+          beginner: "tool use 就是让 AI 从“会说”变成“能帮你做一点实际操作”。"
+        },
+        example: "比如这个学习仓库里，agent 读取目录、创建 Markdown 文件、执行 `git status`，这些都属于工具调用。",
+        misconception: "误区是以为接上工具就等于可靠自动化。工具一多，越权、误调用和参数错误的风险也会一起上升。",
+        nextStep: "后续做 Web3 任务时，把“读信息”和“写操作”区分开，优先让 AI 只做低风险读取和整理。"
+      },
+      wallet: {
+        title: "Wallet",
+        explanation: {
+          ai: "对偏 AI 背景的你来说，钱包不是普通账号系统，而是链上身份入口、签名工具和安全责任的组合。",
+          web3: "钱包不仅是一个地址展示器，它同时承担授权、签名、资产查看和风险提示的角色。",
+          beginner: "钱包可以先理解成你进入链上世界的入口，但它背后真正关键的是私钥控制权，而不是 App 本身。"
+        },
+        example: "当你用 MetaMask 连接测试网时，看到的不只是登录按钮，而是你要对签名和交易负责的操作界面。",
+        misconception: "误区是把钱包当成 Web2 登录。Web2 登录通常是在证明“我是我”，钱包签名则是在授权某个具体链上动作。",
+        nextStep: "下一步请补一行自己的话：地址、助记词、私钥三者分别是什么，以及为什么绝不能公开。"
+      },
+      signature: {
+        title: "Signature",
+        explanation: {
+          ai: "签名是你用私钥对某段消息或某个动作做授权证明，不等于已经把交易发到链上。",
+          web3: "对链上操作来说，签名是授权层，交易广播和链上执行是后续层，不要把它们混成同一步。",
+          beginner: "你可以先把签名理解成“我确认这件事由我授权”，但它本身不一定已经完成转账或合约写入。"
+        },
+        example: "很多 dApp 会先要求你签一段消息来验证身份，这和真正发送一笔带 Gas 的交易不是同一件事。",
+        misconception: "误区是看到钱包弹窗就默认只是登录。有些弹窗是消息签名，有些是授权，有些是实际交易，风险完全不同。",
+        nextStep: "下次看到钱包弹窗时，先区分它是在请求消息签名、代币授权，还是实际发起交易。"
+      },
+      transaction: {
+        title: "Transaction",
+        explanation: {
+          ai: "交易是被签名后广播到链上的一个状态变更请求，它可能成功、失败，也通常需要支付 Gas。",
+          web3: "交易不是一句“执行命令”，而是链上状态更新的载体，结果要以链上确认和回执为准。",
+          beginner: "你可以把交易理解成一份被你正式提交到区块链上的操作申请，比如转账或调用合约。"
+        },
+        example: "你在测试网发送一笔转账后，会得到交易哈希，之后需要去区块浏览器看它是否上链、用了多少 Gas、在哪个区块确认。",
+        misconception: "误区是以为点了确认就一定成功。交易可能因为 Gas、参数、网络状态或合约逻辑失败。",
+        nextStep: "做测试网练习时，把交易哈希、状态、Gas 和区块高度都记录下来。"
+      },
+      gas: {
+        title: "Gas",
+        explanation: {
+          ai: "Gas 是链上执行计算和存储的资源定价机制，不只是“手续费”这么简单。",
+          web3: "Gas 反映的是执行成本和区块空间竞争，它和你调用的是简单转账还是复杂合约逻辑直接相关。",
+          beginner: "可以先把 Gas 理解成链上做事要付的资源费，但本质上它是在给计算和执行定价。"
+        },
+        example: "同样是点一次确认，发送普通转账和调用一个复杂合约函数，Gas 消耗通常差很多。",
+        misconception: "误区是以为 Gas 只在主网重要。其实测试网练习也要看 Gas，因为它会直接影响你对链上执行成本的理解。",
+        nextStep: "后续你可以对比一次普通转账和一次合约调用，观察它们的 Gas 差异。"
+      }
+    };
+
+    const toneGuide = {
+      plain: "下面这版尽量用直白语言，不堆术语。",
+      technical: "下面这版保留一点技术感，但不跳过关键边界。",
+      comparison: "下面这版会多用对比和类比，帮助快速抓住差异。"
+    };
+
+    const sample = {
+      concept: "signature",
+      background: "ai",
+      tone: "comparison",
+      confusion: "我总把签名和交易混在一起，也分不清钱包弹窗到底是在登录、授权，还是在真的发交易。"
+    };
+
+    const form = document.getElementById("generator-form");
+    const output = document.getElementById("output");
+    const sampleBtn = document.getElementById("sample-btn");
+
+    sampleBtn.addEventListener("click", () => {
+      document.getElementById("concept").value = sample.concept;
+      document.getElementById("background").value = sample.background;
+      document.getElementById("tone").value = sample.tone;
+      document.getElementById("confusion").value = sample.confusion;
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const conceptKey = document.getElementById("concept").value;
+      const background = document.getElementById("background").value;
+      const tone = document.getElementById("tone").value;
+      const confusion = document.getElementById("confusion").value.trim();
+      const concept = concepts[conceptKey];
+
+      const analogy = buildAnalogy(conceptKey, background);
+      const personalized = buildPersonalizedNote(conceptKey, background, confusion);
+      const checklist = buildChecklist(conceptKey);
+
+      output.innerHTML = `
+        <h3>${concept.title} 学习草稿</h3>
+        <div class="section">
+          <p class="section-title">解释</p>
+          <p>${toneGuide[tone]} ${concept.explanation[background]}</p>
+        </div>
+        <div class="section">
+          <p class="section-title">例子</p>
+          <p>${concept.example}</p>
+        </div>
+        <div class="section">
+          <p class="section-title">类比</p>
+          <p>${analogy}</p>
+        </div>
+        <div class="section">
+          <p class="section-title">误区或边界</p>
+          <p>${concept.misconception}</p>
+        </div>
+        <div class="section">
+          <p class="section-title">针对你的困惑</p>
+          <p>${personalized}</p>
+        </div>
+        <div class="section">
+          <p class="section-title">下一步行动</p>
+          <ul>${checklist.map((item) => `<li>${item}</li>`).join("")}</ul>
+        </div>
+        <p class="footnote">说明：这是一个本地原型，输出由概念模板、AI 辅助起草的文案结构和人工复核后的边界说明共同组成。它适合用来帮助入门，不适合直接替代官方文档、钱包提示或链上执行判断。</p>
+      `;
+    });
+
+    function buildAnalogy(conceptKey, background) {
+      const analogies = {
+        agent: "可以把 agent 理解成会自己安排待办事项并使用工具的项目助理，而不只是回答一个问题的聊天机器人。",
+        workflow: "workflow 更像一条已经写好的 SOP，AI 只是其中一个工位，不是整条产线的老板。",
+        tool_use: "tool use 好比一个会打字的人终于长出手脚，可以去翻文件、按按钮、运行命令，但动作仍然可能做错。",
+        wallet: "钱包更像一个带保险柜和签章能力的身份入口，不只是网站上的用户名密码框。",
+        signature: "签名像在文件上盖章同意某件事，但盖章本身不一定等于文件已经被送到政府系统并生效。",
+        transaction: "交易更像一份正式递交给链上系统处理的申请单，提交后还要等待系统确认和记账。",
+        gas: "Gas 像链上计算资源的计价器，你做的事情越复杂，占用的资源通常越多。"
+      };
+
+      if (background === "comparison") {
+        return analogies[conceptKey];
+      }
+
+      return analogies[conceptKey];
+    }
+
+    function buildPersonalizedNote(conceptKey, background, confusion) {
+      if (!confusion) {
+        return "你还没有填写具体困惑。建议把“我最分不清的两件事是什么”写下来，学习效果会比泛泛阅读更好。";
+      }
+
+      const hints = {
+        agent: "你的困惑通常说明你正在分辨“回答问题”和“持续执行任务”的区别。判断标准可以放在：是否会自己拆任务、是否会调工具、是否会跨步骤维护状态。",
+        workflow: "如果你总觉得 workflow 和 agent 很像，可以先问自己：下一步是不是提前写死了？如果是，多半更接近 workflow。",
+        tool_use: "当你担心工具调用不可靠时，先把任务拆成“读信息”和“写动作”。前者可以更开放，后者需要更强的人工确认。",
+        wallet: "你现在的困惑很常见。先别把钱包当账号，先把它看成“控制权入口 + 风险入口”，理解会更稳。",
+        signature: "你的困惑非常典型。判断关键在于：这次弹窗是在证明你同意一段消息，还是在请求真正的链上状态变更。",
+        transaction: "如果你分不清交易的结果，记住一条：链上操作不能只看钱包弹窗，要看交易哈希和区块浏览器回执。",
+        gas: "如果你觉得 Gas 很抽象，不要只记定义，后面直接在测试网看一笔转账和一次合约调用的差异。"
+      };
+
+      const backgroundLine = {
+        ai: "因为你偏 AI 背景，建议优先把它和“权限、执行、验证”联系起来理解。",
+        web3: "因为你偏 Web3 背景，建议优先把它和“模型边界、自动化、工具调用”联系起来理解。",
+        beginner: "因为你两边都在入门，建议先抓住概念间的关系，不要一次追求完整细节。"
+      };
+
+      return `${backgroundLine[background]} 你写下的困惑是：“${escapeHtml(confusion)}”。${hints[conceptKey]}`;
+    }
+
+    function buildChecklist(conceptKey) {
+      const steps = {
+        agent: [
+          "用自己的话写出 agent 和 workflow 的区别。",
+          "找一个你最近的学习任务，判断它更适合 prompt、workflow 还是 agent。",
+          "记录一个必须人工确认的节点。"
+        ],
+        workflow: [
+          "把今天的学习任务拆成 4 到 6 个固定步骤。",
+          "标出其中哪一步需要 AI，哪一步必须人工确认。",
+          "把这条流程写进 daily note。"
+        ],
+        tool_use: [
+          "列出一个只读工具调用和一个写入型工具调用。",
+          "说明为什么它们的风险等级不同。",
+          "给写入型动作补一条人工确认规则。"
+        ],
+        wallet: [
+          "写一句区分钱包、地址、私钥的说明。",
+          "补一行：为什么钱包不是普通 Web2 登录。",
+          "不要在任何公开材料里记录真实助记词或私钥。"
+        ],
+        signature: [
+          "下次看到钱包弹窗时，先辨认它是消息签名还是交易确认。",
+          "写一句：签名和交易的关系是什么。",
+          "记录一个你认为最容易误判风险的场景。"
+        ],
+        transaction: [
+          "做一次测试网交易后记录 tx hash。",
+          "到区块浏览器查看状态、Gas 和区块高度。",
+          "把失败可能性也写进你的理解里。"
+        ],
+        gas: [
+          "写一句自己的 Gas 定义，不要只背“手续费”。",
+          "后续比较一次普通转账和一次合约调用的 Gas 差异。",
+          "记录你观察到的成本和等待确认体验。"
+        ]
+      };
+
+      return steps[conceptKey];
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+  </script>
+</body>
+</html>
