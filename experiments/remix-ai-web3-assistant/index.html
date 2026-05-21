@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remix + AI Web3 助手 MVP</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --paper: rgba(255, 251, 244, 0.92);
+      --line: #d8c9b1;
+      --ink: #18212b;
+      --muted: #556270;
+      --accent: #9e4325;
+      --accent-soft: #f3dccb;
+      --green: #1f6a5d;
+      --warn: #8d3a1a;
+      --warn-bg: #fff0e7;
+      --shadow: 0 22px 48px rgba(24, 33, 43, 0.12);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(158, 67, 37, 0.18), transparent 28%),
+        radial-gradient(circle at 85% 20%, rgba(31, 106, 93, 0.12), transparent 24%),
+        linear-gradient(160deg, #f6f1e8 0%, #eee2cc 100%);
+      font-family: "Source Han Serif SC", "Noto Serif SC", "STSong", serif;
+    }
+
+    .page {
+      width: min(1220px, calc(100% - 28px));
+      margin: 28px auto 40px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid rgba(216, 201, 177, 0.86);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .hero,
+    .panel {
+      padding: 28px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(34px, 5vw, 54px);
+      line-height: 1.04;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 48ch;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.75;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .mini {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    .mini strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .panel h2 {
+      margin: 0 0 16px;
+      font-size: 24px;
+    }
+
+    .form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 104px;
+      resize: vertical;
+      line-height: 1.65;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tab {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--ink);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: #fff9f4;
+      border-color: transparent;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: transform 160ms ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    .primary {
+      background: var(--accent);
+      color: #fff9f4;
+    }
+
+    .secondary {
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .output {
+      margin-top: 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .box {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(216, 201, 177, 0.9);
+      background: linear-gradient(180deg, rgba(255, 249, 242, 0.92), rgba(247, 251, 249, 0.94));
+    }
+
+    .box h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      color: var(--green);
+    }
+
+    .box p,
+    .box li {
+      margin: 0;
+      line-height: 1.72;
+    }
+
+    ul, ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .warning {
+      background: var(--warn-bg);
+      border: 1px solid rgba(141, 58, 26, 0.22);
+    }
+
+    .warning h3 {
+      color: var(--warn);
+    }
+
+    .markdown {
+      white-space: pre-wrap;
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 13px;
+      background: rgba(24, 33, 43, 0.04);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px dashed rgba(24, 33, 43, 0.12);
+    }
+
+    .code-block {
+      white-space: pre-wrap;
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      background: rgba(24, 33, 43, 0.05);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(24, 33, 43, 0.12);
+      overflow-x: auto;
+    }
+
+    .footnote {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    @media (max-width: 940px) {
+      .page, .two, .hero-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card hero">
+      <span class="eyebrow">阶段 1 MVP</span>
+      <h1>Remix + AI Web3 助手</h1>
+      <p class="lead">
+        这是第一阶段的本地原型。它不直接连钱包，也不替你发交易；它只负责解释任务、生成 Remix 操作步骤、提示风险，并在执行后帮你整理链上验证记录。若你已启动本地后端，它会调用真实 DeepSeek API；否则会退回本地模板模式。
+      </p>
+      <div class="hero-grid">
+        <div class="mini">
+          <strong>它解决什么问题</strong>
+          把“我知道要去 Remix 点哪里”升级成“我知道这一步到底在做什么、哪里需要签名、执行后要怎么验证”，并支持先按自然语言生成合约修改草稿。
+        </div>
+        <div class="mini">
+          <strong>AI 负责什么</strong>
+          解释函数、判断读写、给出操作步骤、生成记录模板、提醒风险、按需求修改 Solidity 草稿。
+        </div>
+        <div class="mini">
+          <strong>人负责什么</strong>
+          复核地址、函数、参数、网络，在 MetaMask 里人工确认签名或交易。
+        </div>
+        <div class="mini">
+          <strong>明确边界</strong>
+          不接触私钥、助记词、API Key，不绕过人工确认，不自动完成授权、转账或合约写入。
+        </div>
+      </div>
+    </section>
+
+    <section class="card panel">
+      <h2>生成执行说明</h2>
+      <div class="tabs">
+        <button type="button" class="tab active" id="mode-explain-btn">链上交互说明</button>
+        <button type="button" class="tab" id="mode-modify-btn">合约修改草稿</button>
+      </div>
+      <form id="assistant-form" class="form">
+        <div class="two">
+          <label>
+            目标网络
+            <select id="network">
+              <option value="Sepolia">Sepolia</option>
+              <option value="Ethereum Mainnet">Ethereum Mainnet</option>
+              <option value="Base Sepolia">Base Sepolia</option>
+            </select>
+          </label>
+          <label>
+            合约名称
+            <input id="contractName" placeholder="例如 SimpleStorage">
+          </label>
+        </div>
+
+        <label>
+          合约地址
+          <input id="contractAddress" placeholder="例如 0xA4B6b39A7D0dC7EFb55608A886a71e09b4080272">
+        </label>
+
+        <div class="two">
+          <label>
+            函数名
+            <input id="functionName" placeholder="例如 getNumber 或 setNumber">
+          </label>
+          <label>
+            参数
+            <input id="params" placeholder="例如 42 或留空">
+          </label>
+        </div>
+
+        <div class="two">
+          <label>
+            操作类型
+            <select id="actionType">
+              <option value="read">只读调用</option>
+              <option value="write">写入交易</option>
+              <option value="deploy">部署合约</option>
+            </select>
+          </label>
+          <label>
+            钱包
+            <select id="wallet">
+              <option value="MetaMask">MetaMask</option>
+              <option value="Rabby">Rabby</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          用户目标描述
+          <textarea id="goal" placeholder="例如：我想在 Sepolia 上把 SimpleStorage 的 number 改成 42，然后记录交易哈希和浏览器链接。"></textarea>
+        </label>
+
+        <div class="actions">
+          <button type="submit" class="primary">生成 AI 说明</button>
+          <button type="button" class="secondary" id="sample-btn">填入示例</button>
+        </div>
+      </form>
+
+      <form id="modify-form" class="form" hidden>
+        <label>
+          合约名称
+          <input id="modifyContractName" placeholder="例如 SimpleStorage">
+        </label>
+
+        <label>
+          你的自然语言修改需求
+          <textarea id="modifyRequirement" placeholder="例如：请给合约加一个 owner，只有 owner 才能调用 setNumber，并增加 transferOwnership 函数。"></textarea>
+        </label>
+
+        <label>
+          原始 Solidity 合约代码
+          <textarea id="modifyContractCode" style="min-height: 260px;" placeholder="把当前合约代码粘贴到这里"></textarea>
+        </label>
+
+        <div class="actions">
+          <button type="submit" class="primary">生成修改草稿</button>
+          <button type="button" class="secondary" id="modify-sample-btn">填入 SimpleStorage 示例</button>
+        </div>
+      </form>
+
+      <section class="output" id="output">
+        <div class="box">
+          <h3>等待输入</h3>
+          <p>先填写网络、合约、函数和目标描述，再点击“生成 AI 说明”。</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const sample = {
+      network: "Sepolia",
+      contractName: "SimpleStorage",
+      contractAddress: "0xA4B6b39A7D0dC7EFb55608A886a71e09b4080272",
+      functionName: "setNumber",
+      params: "42",
+      actionType: "write",
+      wallet: "MetaMask",
+      goal: "我想在 Sepolia 上把 SimpleStorage 的存储值改成 42，然后保存交易哈希、区块浏览器链接和执行记录。"
+    };
+
+    const form = document.getElementById("assistant-form");
+    const modifyForm = document.getElementById("modify-form");
+    const output = document.getElementById("output");
+    const sampleBtn = document.getElementById("sample-btn");
+    const modifySampleBtn = document.getElementById("modify-sample-btn");
+    const explainModeBtn = document.getElementById("mode-explain-btn");
+    const modifyModeBtn = document.getElementById("mode-modify-btn");
+
+    const modifySample = {
+      contractName: "SimpleStorage",
+      requirement: "请给合约增加 owner 权限控制，只有 owner 可以调用 setNumber，并增加 transferOwnership(address newOwner) 函数。",
+      contractCode: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SimpleStorage {
+    uint256 private number;
+
+    event NumberChanged(uint256 newNumber);
+
+    constructor(uint256 _initialNumber) {
+        number = _initialNumber;
+    }
+
+    function setNumber(uint256 _number) public {
+        number = _number;
+        emit NumberChanged(_number);
+    }
+
+    function getNumber() public view returns (uint256) {
+        return number;
+    }
+}`
+    };
+
+    sampleBtn.addEventListener("click", () => {
+      Object.entries(sample).forEach(([key, value]) => {
+        document.getElementById(key).value = value;
+      });
+    });
+
+    modifySampleBtn.addEventListener("click", () => {
+      document.getElementById("modifyContractName").value = modifySample.contractName;
+      document.getElementById("modifyRequirement").value = modifySample.requirement;
+      document.getElementById("modifyContractCode").value = modifySample.contractCode;
+    });
+
+    explainModeBtn.addEventListener("click", () => {
+      form.hidden = false;
+      modifyForm.hidden = true;
+      explainModeBtn.classList.add("active");
+      modifyModeBtn.classList.remove("active");
+    });
+
+    modifyModeBtn.addEventListener("click", () => {
+      form.hidden = true;
+      modifyForm.hidden = false;
+      modifyModeBtn.classList.add("active");
+      explainModeBtn.classList.remove("active");
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const data = {
+        network: document.getElementById("network").value,
+        contractName: document.getElementById("contractName").value.trim() || "未命名合约",
+        contractAddress: document.getElementById("contractAddress").value.trim() || "待补充合约地址",
+        functionName: document.getElementById("functionName").value.trim() || "待补充函数名",
+        params: document.getElementById("params").value.trim(),
+        actionType: document.getElementById("actionType").value,
+        wallet: document.getElementById("wallet").value,
+        goal: document.getElementById("goal").value.trim() || "待补充目标描述"
+      };
+
+      output.innerHTML = `
+        <div class="box">
+          <h3>生成中</h3>
+          <p>正在请求 AI 说明。如果本地后端不可用，页面会自动退回本地模板模式。</p>
+        </div>
+      `;
+
+      const aiResult = await fetchAiResult(data);
+      const meta = aiResult.meta;
+      const steps = aiResult.steps;
+      const risks = aiResult.risks;
+      const checklist = aiResult.checklist;
+      const markdown = aiResult.markdown;
+      const modeNote = aiResult.mode === "remote"
+        ? "当前结果来自本地后端转发的 DeepSeek API。"
+        : "当前结果来自本地模板模式。若要使用真实模型，请先运行本地后端。";
+
+      output.innerHTML = `
+        <div class="box">
+          <h3>AI 任务解释</h3>
+          <p><strong>目标：</strong>${escapeHtml(data.goal)}</p>
+          <p><strong>操作判断：</strong>${meta.summary}</p>
+          <p><strong>是否需要钱包确认：</strong>${meta.walletApproval}</p>
+          <p><strong>是否可能消耗 Gas：</strong>${meta.gas}</p>
+          <p><strong>建议验证方式：</strong>${meta.verification}</p>
+          <p class="footnote">${modeNote}</p>
+        </div>
+
+        <div class="box">
+          <h3>Remix 操作步骤</h3>
+          <ol>${steps.map((item) => `<li>${item}</li>`).join("")}</ol>
+        </div>
+
+        <div class="box warning">
+          <h3>人工确认与风险提醒</h3>
+          <ul>${risks.map((item) => `<li>${item}</li>`).join("")}</ul>
+        </div>
+
+        <div class="box">
+          <h3>执行前检查清单</h3>
+          <ul>${checklist.map((item) => `<li>${item}</li>`).join("")}</ul>
+        </div>
+
+        <div class="box">
+          <h3>执行后 Markdown 记录模板</h3>
+          <div class="markdown">${escapeHtml(markdown)}</div>
+          <p class="footnote">这份模板用于你在完成 Remix 调用和钱包确认后，手动补上交易哈希、浏览器链接和实际结果。</p>
+        </div>
+      `;
+    });
+
+    modifyForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const payload = {
+        contractName: document.getElementById("modifyContractName").value.trim() || "未命名合约",
+        requirement: document.getElementById("modifyRequirement").value.trim() || "待补充修改需求",
+        contractCode: document.getElementById("modifyContractCode").value.trim() || "// 待补充原始合约代码"
+      };
+
+      output.innerHTML = `
+        <div class="box">
+          <h3>生成中</h3>
+          <p>正在请求 AI 生成合约修改草稿。如果本地后端不可用，页面会退回本地保守模板。</p>
+        </div>
+      `;
+
+      const result = await fetchModifyResult(payload);
+      const modeNote = result.mode === "remote"
+        ? "当前结果来自本地后端转发的 DeepSeek API。"
+        : "当前结果来自本地保守模板。若要使用真实模型，请先运行本地后端。";
+
+      output.innerHTML = `
+        <div class="box">
+          <h3>修改摘要</h3>
+          <p>${result.summary}</p>
+          <p class="footnote">${modeNote}</p>
+        </div>
+        <div class="box">
+          <h3>改动清单</h3>
+          <ul>${result.changeList.map((item) => `<li>${item}</li>`).join("")}</ul>
+        </div>
+        <div class="box warning">
+          <h3>人工复核清单</h3>
+          <ul>${result.reviewChecklist.map((item) => `<li>${item}</li>`).join("")}</ul>
+        </div>
+        <div class="box warning">
+          <h3>风险提醒</h3>
+          <ul>${result.risks.map((item) => `<li>${item}</li>`).join("")}</ul>
+        </div>
+        <div class="box">
+          <h3>Remix 下一步</h3>
+          <ol>${result.remixSteps.map((item) => `<li>${item}</li>`).join("")}</ol>
+        </div>
+        <div class="box">
+          <h3>修改后的 Solidity 草稿</h3>
+          <div class="code-block">${escapeHtml(result.modifiedContract)}</div>
+        </div>
+      `;
+    });
+
+    async function fetchAiResult(data) {
+      try {
+        const response = await fetch("/api/explain", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          throw new Error("Remote AI unavailable");
+        }
+
+        const remote = await response.json();
+        return {
+          mode: "remote",
+          meta: {
+            summary: remote.summary || buildMeta(data).summary,
+            walletApproval: remote.walletApproval || buildMeta(data).walletApproval,
+            gas: remote.gas || buildMeta(data).gas,
+            verification: remote.verification || buildMeta(data).verification
+          },
+          steps: Array.isArray(remote.steps) && remote.steps.length ? remote.steps : buildSteps(data),
+          risks: Array.isArray(remote.risks) && remote.risks.length ? remote.risks : buildRisks(data),
+          checklist: Array.isArray(remote.checklist) && remote.checklist.length ? remote.checklist : buildChecklist(data),
+          markdown: remote.markdown || buildMarkdown(data, buildMeta(data))
+        };
+      } catch (error) {
+        const fallbackMeta = buildMeta(data);
+        return {
+          mode: "local",
+          meta: fallbackMeta,
+          steps: buildSteps(data),
+          risks: buildRisks(data),
+          checklist: buildChecklist(data),
+          markdown: buildMarkdown(data, fallbackMeta)
+        };
+      }
+    }
+
+    async function fetchModifyResult(payload) {
+      try {
+        const response = await fetch("/api/modify-contract", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error("Remote modify unavailable");
+        }
+
+        const remote = await response.json();
+        return {
+          mode: "remote",
+          summary: remote.summary || "AI 已生成一份修改草稿，请继续人工复核。",
+          changeList: Array.isArray(remote.changeList) && remote.changeList.length ? remote.changeList : fallbackModify(payload).changeList,
+          modifiedContract: remote.modifiedContract || fallbackModify(payload).modifiedContract,
+          reviewChecklist: Array.isArray(remote.reviewChecklist) && remote.reviewChecklist.length ? remote.reviewChecklist : fallbackModify(payload).reviewChecklist,
+          risks: Array.isArray(remote.risks) && remote.risks.length ? remote.risks : fallbackModify(payload).risks,
+          remixSteps: Array.isArray(remote.remixSteps) && remote.remixSteps.length ? remote.remixSteps : fallbackModify(payload).remixSteps
+        };
+      } catch (error) {
+        return {
+          mode: "local",
+          ...fallbackModify(payload)
+        };
+      }
+    }
+
+    function fallbackModify(payload) {
+      return {
+        summary: "本地模板模式无法真正理解并改写完整合约逻辑，因此这里只返回保守提示：请启动本地后端后再请求真实 AI 修改结果。",
+        changeList: [
+          "你已经提供了原始合约和自然语言需求。",
+          "下一步应该由真实 AI 根据需求生成完整修改草稿。",
+          "在未接入真实模型时，不建议用本地模板胡乱改写 Solidity 代码。"
+        ],
+        modifiedContract: payload.contractCode,
+        reviewChecklist: [
+          "检查编译器版本是否保持兼容。",
+          "检查新增状态变量、函数可见性和访问控制是否合理。",
+          "检查是否需要新增事件、错误处理或边界条件。",
+          "在 Remix 中重新编译，并手动阅读 diff。"
+        ],
+        risks: [
+          "AI 修改合约时，最容易引入访问控制缺失、状态变量覆盖和函数副作用问题。",
+          "即使修改需求看起来简单，也必须重新编译、重新阅读、重新测试。"
+        ],
+        remixSteps: [
+          "启动本地后端后重新请求真实 AI 修改结果。",
+          "把生成的 Solidity 草稿复制到 Remix。",
+          "编译并修正语法或依赖问题。",
+          "手动检查高风险逻辑后再决定是否部署到测试网。"
+        ]
+      };
+    }
+
+    function buildMeta(data) {
+      const isRead = data.actionType === "read";
+      const isDeploy = data.actionType === "deploy";
+      const hasParams = data.params.length > 0;
+      const prettyParams = hasParams ? `参数为 ${data.params}` : "当前没有额外参数";
+
+      if (isRead) {
+        return {
+          summary: `你正在准备对 ${data.contractName} 的 \`${data.functionName}()\` 发起只读调用。${prettyParams}。这类操作通常用于读取链上状态，不会直接修改链上数据。`,
+          walletApproval: "通常不需要链上写入确认；如果工具要求连接钱包，也要先确认它不是在请求签名或授权。",
+          gas: "通常不会产生链上 Gas 成本。",
+          verification: "记录读取结果，并与预期值对比；如有需要，可附上合约地址和浏览器链接。"
+        };
+      }
+
+      if (isDeploy) {
+        return {
+          summary: `你正在准备在 ${data.network} 上部署 ${data.contractName}。部署属于链上写入，会创建新的合约地址。`,
+          walletApproval: "需要钱包确认交易。",
+          gas: "会消耗 Gas，通常比普通转账更高。",
+          verification: "保存部署交易哈希、合约地址和区块浏览器链接，并确认合约已成功创建。"
+        };
+      }
+
+      return {
+        summary: `你正在准备调用 ${data.contractName} 的 \`${data.functionName}()\` 写入函数。${prettyParams}。这类操作会尝试修改链上状态。`,
+        walletApproval: "需要钱包确认交易。",
+        gas: "会消耗 Gas。",
+        verification: "保存交易哈希、区块浏览器链接，并在执行后再次读取状态确认结果。"
+      };
+    }
+
+    function buildSteps(data) {
+      const base = [
+        `打开 Remix，并确认环境使用的是 \`${data.wallet}\` + \`${data.network}\`。`,
+        `载入或选择目标合约 \`${data.contractName}\`，确认合约地址为 \`${data.contractAddress}\`。`,
+        `在合约交互面板中找到函数 \`${data.functionName}\`。`
+      ];
+
+      if (data.actionType === "read") {
+        return base.concat([
+          `检查这次调用是否只是读取状态，而不是写入交易。`,
+          `执行读取操作，并记录返回结果。`,
+          `把读取结果、合约地址和你对结果的理解写回记录模板。`
+        ]);
+      }
+
+      if (data.actionType === "deploy") {
+        return [
+          `打开 Remix，确认编译器版本与合约兼容，并选择 \`${data.wallet}\` 作为部署环境。`,
+          `确认网络是 \`${data.network}\`，避免误发到其他网络。`,
+          `填写构造函数参数${data.params ? `：\`${data.params}\`` : "（如果没有则保持为空）"}。`,
+          `点击部署后，仔细查看钱包弹窗中的网络、Gas、目标操作和费用摘要。`,
+          `人工确认后发送交易。`,
+          `保存部署交易哈希、生成的合约地址和区块浏览器链接。`
+        ];
+      }
+
+      return base.concat([
+        `填写参数${data.params ? `：\`${data.params}\`` : "（如果函数需要参数，这里应先补充）"}。`,
+        `点击执行前，先确认这次操作确实是你想要的链上写入。`,
+        `钱包弹窗出现后，核对网络、合约地址、函数含义和 Gas。`,
+        `人工确认后发送交易。`,
+        `保存交易哈希，并在区块浏览器里验证状态。`,
+        `如果这是状态写入，再执行一次只读函数确认结果已更新。`
+      ]);
+    }
+
+    function buildRisks(data) {
+      const common = [
+        "不要把私钥、助记词、API Key 或 `.env` 内容输入到这个页面。",
+        "不要只看 AI 说明就执行，目标地址、函数名、参数和网络都要自己复核。",
+        "真正的执行内容以钱包弹窗和链上回执为准，不以 AI 文本总结为准。"
+      ];
+
+      if (data.actionType === "read") {
+        return common.concat([
+          "即使是只读调用，也要确认工具没有额外请求消息签名或授权。",
+          "如果读取结果和预期不一致，不要先怪合约，先检查网络、地址和函数是否正确。"
+        ]);
+      }
+
+      if (data.actionType === "deploy") {
+        return common.concat([
+          "部署合约会真正创建链上合约地址，必须确认当前网络是测试网而不是主网。",
+          "构造函数参数一旦填错，部署出的合约初始状态也会跟着出错。"
+        ]);
+      }
+
+      return common.concat([
+        "写入交易会改变链上状态并消耗 Gas，不能把它当成普通登录。",
+        "如果这是授权、转账或不熟悉的函数，必须额外提高警惕，必要时不要执行。"
+      ]);
+    }
+
+    function buildChecklist(data) {
+      const list = [
+        `我确认当前网络是 \`${data.network}\`。`,
+        `我确认目标合约地址是 \`${data.contractAddress}\`。`,
+        `我确认要调用的函数是 \`${data.functionName}\`。`
+      ];
+
+      if (data.params) {
+        list.push(`我确认参数 \`${data.params}\` 是我真正想提交的值。`);
+      } else {
+        list.push("如果这个函数需要参数，我会先补全参数后再执行。");
+      }
+
+      if (data.actionType === "read") {
+        list.push("我确认这一步是只读，不应触发链上写入。");
+        list.push("我会记录读取结果并判断是否符合预期。");
+      } else if (data.actionType === "deploy") {
+        list.push("我确认部署交易需要钱包人工确认。");
+        list.push("我会保存部署交易哈希、合约地址和浏览器链接。");
+      } else {
+        list.push("我确认这一步会触发链上写入并需要钱包人工确认。");
+        list.push("我会保存交易哈希，并在执行后再次读取状态验证结果。");
+      }
+
+      return list;
+    }
+
+    function buildMarkdown(data, meta) {
+      const functionCall = data.params ? `${data.functionName}(${data.params})` : `${data.functionName}()`;
+
+      return `# 执行记录\n\n- 网络：${data.network}\n- 钱包：${data.wallet}\n- 合约名称：${data.contractName}\n- 合约地址：${data.contractAddress}\n- 函数：${functionCall}\n- 操作类型：${labelAction(data.actionType)}\n- 用户目标：${data.goal}\n\n## AI 预解释\n\n${meta.summary}\n\n- 是否需要钱包确认：${meta.walletApproval}\n- 是否会消耗 Gas：${meta.gas}\n- 建议验证方式：${meta.verification}\n\n## 人工确认\n\n- 我已检查网络、地址、函数和参数\n- 我已在钱包弹窗中人工确认执行内容\n\n## 执行结果\n\n- 交易哈希：待补充\n- 区块浏览器链接：待补充\n- 读取结果 / 写入结果：待补充\n- 状态：待补充\n\n## 风险与备注\n\n- 本次操作是否存在误解签名 / 授权 / 写入的风险：待补充\n- 本次实际遇到的问题：待补充\n- 本次学习收获：待补充`;
+    }
+
+    function labelAction(actionType) {
+      if (actionType === "read") return "只读调用";
+      if (actionType === "deploy") return "部署合约";
+      return "写入交易";
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+  </script>
+</body>
+</html>
